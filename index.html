@@ -104,12 +104,18 @@
     <button onclick="printData()" style="width:100%; background:#059669; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer;">PRINT DATA</button>
   </div>
 
+  <!-- HALAMAN PREVIEW SEBELUM SUBMIT -->
   <div id="previewPage" class="section hidden">
     <p><b>Konfirmasi Data:</b></p>
+    
+    <!-- Teks Peringatan Penegas -->
+    <p style="color: #b91c1c; font-size: 13px; font-weight: bold; line-height: 1.4; margin-bottom: 15px;">
+      *Pastikan pilihan anda sudah benar, pengisian hanya bisa dilakukan satu kali dan tidak dapat dibatalkan setelah simpan permanen
+    </p>
+
     <div id="previewContent" class="data-info"></div>
     <button id="btnSimpanFinal" onclick="submitFinal()">YA, SIMPAN PERMANEN</button>
     <button class="btn-outline" onclick="backToForm()">UBAH DATA</button>
-    
     <button class="btn-outline" onclick="resetKeHome()" style="background: #fecaca; color: #b91c1c; border: 1px solid #fca5a5; margin-top: 5px;">
       ❌ BATAL
     </button>
