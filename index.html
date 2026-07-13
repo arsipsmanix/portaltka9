@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <base target="_top">
+  <title>Form TKA SMANIX</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; line-height: 1.6; max-width: 500px; margin: 0 auto; background: #f4f4f4; }
+    .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+    .hidden {display: none !important;}
+    .section { margin-bottom: 20px; }
+    input[type="text"], input[type="password"], select { width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button { width: 100%; padding: 12px; background: #4f46e5; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-bottom: 10px; }
+    button:disabled { background: #ccc; }
+    .btn-outline { background: #eee; color: #333; }
+    .data-info { background: #eef2ff; padding: 15px; border-left: 5px solid #4f46e5; margin: 15px 0; }
+    h2 { color: #4f46e5; text-align: center; margin-top: 0; }
+    hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
+    
+    @media print {
+      /* Sembunyikan semua elemen di layar utama saat mode cetak */
+      body > *:not(#printTemplate) { display: none !important; }
+      
+      /* Pastikan template cetak terlihat penuh */
+      #printTemplate { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
+      
+      /* Orientasi Landscape untuk PDF data TKA */
+      @page { size: landscape; margin: 10mm; }
+    }
+
+    .box-opsi {
+      padding: 20px 10px;
+      border: 2px solid #4f46e5;
+      border-radius: 16px;
+      text-align: center;
+      color: #4f46e5; 
+      background: white; 
+      transition: 0.3s;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .box-opsi.selected {
+      background: #4f46e5;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <div style="text-align: center; margin-bottom: 15px;">
+    <img src="https://lh3.googleusercontent.com/u/0/d/1NmhujSqCWX3fY30wSlAe9Ur5aR0jevXc" alt="Logo SMAN 9" style="width: 75px; height: auto; margin-bottom: 8px;">
+    <h2 style="margin: 0; font-size: 18px; color: #1e293b; letter-spacing: 1px; font-weight: 800;">SMAN 9 SURABAYA</h2>
+    <p style="margin: 3px 0 0 0; font-weight: bold; color: #4f46e5; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">PORTAL TKA 2026</p>
+  </div>
+  <hr style="border: 0; border-top: 2px solid #f1f5f9; margin-bottom: 20px;">
+  <div id="mainTitle" style="display:none;"></div>
+
+  <div id="homePage" class="section">
+    <button onclick="bukaHalamanSiswa()">ISI KESEDIAAN SISWA</button>
+    <button class="btn-outline" onclick="loginAdmin()">LOGIN ADMIN</button>
+  </div>
+
+  <div id="siswaPage" class="section hidden">
+    <label>Masukkan NISN diawali angka 9:</label>
+    <input type="text" id="nisn" placeholder="Contoh: 900123">
+    <p id="statusTxt" style="color: blue; font-size: 12px;"></p>
+    <button onclick="cekAlur()">CEK DATA</button>
+    <button class="btn-outline" onclick="resetKeHome()">KEMBALI</button>
+  </div>
+
+  <div id="formKesediaan" class="section hidden">
+    <div id="dataDiri" class="data-info"></div>
+    <p style="font-weight:bold; margin-bottom:15px;">Apakah Anda Bersedia Mengikuti TKA?</p>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 25px;">
+      <label style="cursor:pointer;">
+        <input type="radio" name="statusTKA" value="Mengikuti" onclick="toggleMapel(true)" style="display:none;">
+        <div class="box-opsi" id="boxIkut">BERSEDIA</div>
+      </label>
+      <label style="cursor:pointer;">
+        <input type="radio" name="statusTKA" value="Tidak Mengikuti" onclick="toggleMapel(false)" style="display:none;">
+        <div class="box-opsi" id="boxTidak">TIDAK BERSEDIA</div>
+      </label>
+    </div>
+    <div id="areaAksi" class="hidden">
+      <div id="opsiMapel" class="hidden">
+        <hr><label>Pilih Mata Pelajaran 1:</label><select id="mapel1"></select>
+        <label>Pilih Mata Pelajaran 2:</label><select id="mapel2"></select>
+      </div>
+      <hr><button onclick="periksaData()">LANJUT PERIKSA</button>
+      <button class="btn-outline" onclick="resetKeHome()">BATAL</button>
+    </div> 
+  </div>
+
+  <div id="adminPage" class="section hidden">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+      <h3 style="margin:0; color: #1e293b;">PORTAL Admin</h3>
+    </div>
+    <div id="adminContent">
+       <p style="text-align:center; color:#94a3b8;">Memproses data...</p>
+    </div>
+    <button id="btnRefreshAdmin" onclick="refreshAdmin()" style="width:100%; background:#4f46e5; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer; margin-bottom:10px;">REFRESH DATA</button>
+    <button onclick="printData()" style="width:100%; background:#059669; color:white; border:none; padding:12px; border-radius:6px; cursor:pointer;">PRINT DATA</button>
+  </div>
+
+  <div id="previewPage" class="section hidden">
+    <p><b>Konfirmasi Data:</b></p>
+    <div id="previewContent" class="data-info"></div>
+    <button id="btnSimpanFinal" onclick="submitFinal()">YA, SIMPAN PERMANEN</button>
+    <button class="btn-outline" onclick="backToForm()">UBAH DATA</button>
+  </div>
+
+  <div id="finishPage" class="section hidden" style="text-align:center; padding: 40px 20px;">
+    <div style="background: #dcfce7; color: #15803d; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 30px;">
+      ✓
+    </div>
+    <h2 style="color: #1e293b; margin-bottom: 10px;">Terima Kasih!</h2>
+    <div id="summaryData" style="margin: 20px 0;"></div>
+
+    <p style="color: #64748b; line-height: 1.6; font-size: 15px;">
+      Data Anda telah berhasil disimpan di Portal TKA.<br>
+      <b>Semoga meraih hasil maksimal!</b>
+    </p>
+    <hr style="border: 0; border-top: 1px solid #e2e8f0; margin: 30px 0;">
+    <p style="color: #94a3b8; font-size: 12px; font-style: italic;">
+      (Halaman ini adalah bukti pengisian. Silakan tutup browser atau refresh jika ingin mengisi kembali)<br>
+      <br>
+      Develop by #3 @2026<br>
+      Portal TKA part of SYNC9<br>
+      Terhubung. Terintegrasi. Terkendali
+    </p>
+  </div>
+</div>
+
+<div id="printTemplate" style="display:none;"></div>
+
+<script>
+// URL Backend Google Apps Script yang sudah terintegrasi otomatis
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxgKivoUnQtRqO3ujcKt9B49blwUCNpYtToSgGEOHC7RuGph3uCFdCsSGLrP7dR9_N8Gw/exec";
+
+let dataSiswa = []; 
+let currentUser = {};
+
+function bukaHalamanSiswa() {
+  tampilHalaman('siswaPage');
+  document.getElementById('mainTitle').innerText = "Input Data Siswa";
+}
+
+function resetKeHome() {
+  location.reload(); 
+}
+
+function tampilHalaman(idHalaman) {
+  const semuaSection = document.querySelectorAll('.section');
+  semuaSection.forEach(s => {
+    s.classList.add('hidden');
+    s.style.display = 'none'; 
+  });
+
+  const target = document.getElementById(idHalaman);
+  if (target) {
+    target.classList.remove('hidden');
+    target.style.display = 'block'; 
+  }
+}
+
+// Helper untuk fetch data menggunakan metode GET ke sistem Apps Script
+async function panggilAPI(paramAksi) {
+  let response = await fetch(`${GAS_URL}?${paramAksi}`);
+  return await response.json();
+}
+
+async function cekAlur() {
+  const nisn = document.getElementById("nisn").value;
+  if(!nisn) return alert("Isi NISN!");
+  
+  document.getElementById("statusTxt").innerText = "Mengecek...";
+  
+  try {
+    // 1. Cek tabel RESPON apakah NISN ini sudah mengisi kesediaan
+    let respon = await panggilAPI(`aksi=getResponByNISN&nisn=${nisn}`);
+    
+    if (respon.found) {
+      document.querySelectorAll('.section').forEach(s => {
+        s.classList.add('hidden');
+        s.style.display = 'none';
+      });
+      
+      const finishPage = document.getElementById('finishPage');
+      finishPage.classList.remove('hidden');
+      finishPage.style.display = 'block'; 
+      
+      document.getElementById('summaryData').innerHTML = `
+        <div style="text-align:left; font-size:14px; background: #f0f9ff; padding: 15px; border-radius: 8px; border-left: 5px solid #0369a1;">
+            <b>Nama:</b> ${respon.nama}<br>
+            <b>Kelas:</b> ${respon.kelas}<br>
+            <b>Status:</b> ${respon.status}<br>
+            ${respon.status === 'Mengikuti' ? `<b>Mapel 1:</b> ${respon.mapel1}<br><b>Mapel 2:</b> ${respon.mapel2}` : ''}
+        </div>
+      `;
+      return;
+    }
+
+    // 2. Alur jika data respon belum ada, cek keberadaan data siswa di master
+    let siswa = await panggilAPI(`aksi=getSiswaByNISN&nisn=${nisn}`);
+    if (!siswa.found) {
+      document.getElementById("statusTxt").innerText = "";
+      return alert("NISN Tidak Terdaftar!");
+    }
+    
+    currentUser = siswa;
+    tampilHalaman('formKesediaan');
+    document.getElementById("dataDiri").innerHTML = `Nama: <b>${siswa.nama}</b><br>Kelas: <b>${siswa.kelas}</b>`;
+    loadMapel();
+
+  } catch(err) {
+    console.error(err);
+    alert("Terjadi kesalahan koneksi sistem.");
+  }
+}
+
+async function loadMapel() {
+  try {
+    let list = await panggilAPI('aksi=getListMapel');
+    let opt = '<option value="" disabled selected>Pilih Mapel...</option>';
+    list.forEach(m => opt += `<option value="${m}">${m}</option>`);
+    document.getElementById("mapel1").innerHTML = opt;
+    document.getElementById("mapel2").innerHTML = opt;
+  } catch(err) {
+    console.error("Gagal load mapel:", err);
+  }
+}
+
+function toggleMapel(isIkut) {
+  const areaAksi = document.getElementById("areaAksi");
+  const opsiMapel = document.getElementById("opsiMapel");
+  const boxIkut = document.getElementById('boxIkut');
+  const boxTidak = document.getElementById('boxTidak');
+
+  if (!areaAksi || !opsiMapel) return;
+  areaAksi.classList.remove('hidden');
+  
+  if(isIkut) {
+    opsiMapel.classList.remove('hidden');
+    if(boxIkut) { boxIkut.style.background = "#4f46e5"; boxIkut.style.color = "white"; }
+    if(boxTidak) { boxTidak.style.background = "white"; boxTidak.style.color = "#4f46e5"; }
+  } else {
+    opsiMapel.classList.add('hidden');
+    if(boxIkut) { boxIkut.style.background = "white"; boxIkut.style.color = "#4f46e5"; }
+    if(boxTidak) { boxTidak.style.background = "#4f46e5"; boxTidak.style.color = "white"; }
+  }
+}
+
+function periksaData() {
+  const status = document.querySelector('input[name="statusTKA"]:checked');
+  if(!status) return alert("Pilih status kesediaan!");
+  
+  const m1 = document.getElementById("mapel1").value;
+  const m2 = document.getElementById("mapel2").value;
+
+  if(status.value === "Mengikuti") {
+    if(!m1 || !m2) return alert("Pilih kedua mapel!");
+    if(m1 === m2) return alert("Mapel tidak boleh sama!");
+  }
+
+  tampilHalaman('previewPage');
+  document.getElementById("previewContent").innerHTML = `
+    Nama: ${currentUser.nama}<br>
+    Kelas: ${currentUser.kelas}<br>
+    Status: <b>${status.value}</b><br>
+    ${status.value === 'Mengikuti' ? `Mapel 1: ${m1}<br>Mapel 2: ${m2}` : ''}
+  `;
+}
+
+function backToForm() {
+  tampilHalaman('formKesediaan');
+}
+
+async function submitFinal() {
+  const btn = document.getElementById("btnSimpanFinal");
+  btn.disabled = true;
+  btn.innerText = "Sedang Menyimpan...";
+
+  const status = document.querySelector('input[name="statusTKA"]:checked').value;
+  const payload = {
+    nisn: currentUser.nisn, 
+    nama: currentUser.nama, 
+    kelas: currentUser.kelas, 
+    status: status,
+    mapel1: status === "Mengikuti" ? document.getElementById("mapel1").value : "-",
+    mapel2: status === "Mengikuti" ? document.getElementById("mapel2").value : "-"
+  };
+
+  try {
+    // Kirim data baru ke backend Apps Script dengan metode POST
+    let response = await fetch(GAS_URL, {
+      method: 'POST',
+      body: JSON.stringify({
+        aksi: "simpanJawaban",
+        data: payload
+      })
+    });
+    let res = await response.json();
+
+    document.querySelectorAll('.section').forEach(s => {
+      s.classList.add('hidden');
+      s.style.display = 'none'; 
+    });
+    
+    const finish = document.getElementById('finishPage');
+    if (finish) {
+      finish.classList.remove('hidden');
+      finish.style.display = 'block'; 
+      
+      const title = document.getElementById('mainTitle');
+      if (title) title.innerText = "Simpan Berhasil";
+
+      const summary = document.getElementById('summaryData');
+      if (summary) {
+        summary.innerHTML = `
+          <div style="text-align:left; font-size:14px; margin-bottom:20px; border-left: 5px solid #15803d; background: #f0fdf4; padding: 15px; border-radius: 4px;">
+            <b>Nama:</b> ${res.nama}<br>
+            <b>Kelas:</b> ${res.kelas}<br>
+            <b>Status:</b> ${res.status}<br>
+            ${res.status === 'Mengikuti' ? `<b>Mapel 1:</b> ${res.mapel1}<br><b>Mapel 2:</b> ${res.mapel2}` : ''}
+          </div>
+        `;
+      }
+    }
+  } catch(err) {
+    console.error(err);
+    alert("Gagal menyimpan data ke Google Sheets.");
+    btn.disabled = false;
+    btn.innerText = "YA, SIMPAN PERMANEN";
+  }
+}
+
+function loginAdmin() {
+  const pass = prompt("Password Admin:");
+  if (pass === "ADMIN9") {
+    tampilHalaman('adminPage');
+    setTimeout(function() {
+      refreshAdmin();
+    }, 500); 
+  } else if (pass !== null) {
+    alert("Password Salah!");
+  }
+}
+
+async function refreshAdmin() {
+  const content = document.getElementById("adminContent");
+  const btn = document.getElementById("btnRefreshAdmin");
+  
+  if (btn) { btn.innerText = "Sinkronisasi..."; btn.disabled = true; }
+  if (content) content.innerHTML = "<p style='text-align:center;'>Menghitung data...</p>";
+
+  try {
+    let d = await panggilAPI('aksi=getAdminData');
+    window.dataSiswa = d.listSiswa; 
+
+    let html = `
+      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; color: #ffffff;">
+        <div style="background:#1e293b; padding:8px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
+          <small>Total Siswa</small><br><b style="font-size:16px;">${d.total}</b>
+        </div>
+        <div style="background:#2563eb; padding:8px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
+          <small>Sudah Isi</small><br><b style="font-size:16px;">${d.sudah}</b>
+        </div>
+        <div style="background:#c2410c; padding:8px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
+          <small>Belum Isi</small><br><b style="font-size:16px;">${d.total - d.sudah}</b>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; color: #ffffff;">
+        <div style="background:#15803d; padding:10px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
+          <small>Ikut TKA</small><br><b style="font-size:16px;">${d.ikut}</b>
+        </div>
+        <div style="background:#be123c; padding:10px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
+          <small>Tidak Ikut</small><br><b style="font-size:16px;">${d.tidak}</b>
+        </div>
+      </div>
+
+      <div style="background:white; border:1px solid #e2e8f0; padding:12px; border-radius:8px; margin-bottom:12px; text-align:left;">
+        <p style="margin:0 0 8px 0; font-weight:bold; font-size:13px; color:#1e293b; border-bottom:2px solid #f1f5f9;">REKAP PER MAPEL</p>
+        <div style="font-size:12px; line-height:1.6;">
+    `;
+
+    if (d.mapel && Object.keys(d.mapel).length > 0) {
+      for (let m in d.mapel) {
+        html += `<div style="display:flex; justify-content:space-between; border-bottom:1px solid #f8fafc; padding:3px 0;">
+                   <span>${m}</span> <b style="background:#eef2ff; padding:0 6px; border-radius:4px;">${d.mapel[m]}</b>
+                 </div>`;
+      }
+    } else {
+      html += `<div style="color:#94a3b8; text-align:center;">Belum ada pilihan mapel</div>`;
+    }
+
+    html += `
+        </div>
+      </div>
+
+      <div style="background:#1e293b; color:#cbd5e1; padding:12px; border-radius:8px; text-align:left; font-size:11px;">
+        <p style="margin:0 0 8px 0; font-weight:bold; color:#94a3b8; border-bottom:1px solid #334155; padding-bottom:4px;">10 PENGAKSES TERAKHIR</p>
+    `;
+
+    if (d.log && d.log.length > 0) {
+      d.log.forEach(x => {
+        html += `<div style="margin-bottom:4px; color:#f8fafc; display:flex; justify-content:space-between;">
+                   <span>${x.nama}</span>
+                   <span style="color:#64748b;">${x.waktu}</span>
+                 </div>`;
+      });
+    } else {
+      html += `<div style="color:#475569; text-align:center;">Belum ada aktivitas</div>`;
+    }
+
+    html += `
+      </div>
+      <br>
+    `;
+
+    if (content) content.innerHTML = html;
+  } catch(err) {
+    console.error(err);
+    if (content) content.innerHTML = "<p style='text-align:center; color:red;'>Gagal sinkronisasi data admin.</p>";
+  } finally {
+    if (btn) { btn.innerText = "REFRESH DATA"; btn.disabled = false; }
+  }
+}
+
+// Logika visual pemilihan tombol box radio kesediaan siswa
+document.querySelectorAll('input[name="statusTKA"]').forEach(radio => {
+  radio.addEventListener('change', function() {
+    const boxIkut = document.getElementById('boxIkut');
+    const boxTidak = document.getElementById('boxTidak');
+    
+    boxIkut.classList.remove('selected');
+    boxTidak.classList.remove('selected');
+    
+    if(this.value === 'Mengikuti') {
+      boxIkut.classList.add('selected');
+    } else {
+      boxTidak.classList.add('selected');
+    }
+  });
+});
+
+// FUNGSI PRINT DATA TKA (Per Kelas + Sortir Keikutsertaan & Nama + Ganti Halaman Baru otomatis di PDF)
+function printData() {
+    if (typeof window.dataSiswa === 'undefined' || !window.dataSiswa || window.dataSiswa.length === 0) {
+        alert("Data belum dimuat! Mohon klik REFRESH DATA sekali lagi.");
+        return;
+    }
+
+    let data = [...window.dataSiswa];
+    let kelompokKelas = {};
+
+    // Pecah data siswa ke dalam kategori kelompok kelas masing-masing
+    data.forEach(item => {
+        let kelas = item.kelas || "TANPA KELAS";
+        if (!kelompokKelas[kelas]) {
+            kelompokKelas[kelas] = [];
+        }
+        kelompokKelas[kelas].push(item);
+    });
+
+    // Urutkan kelas secara alfabetis
+    let daftarKelas = Object.keys(kelompokKelas).sort();
+
+    const printTemplate = document.getElementById("printTemplate");
+    printTemplate.innerHTML = ""; 
+
+    // Render tabel data per kelas
+    daftarKelas.forEach(kelas => {
+        let dataSiswaKelas = kelompokKelas[kelas];
+
+        // Sortir siswa di dalam kelas: Yang Ikut di atas, sisanya di bawah, diurutkan alfabetis nama
+        dataSiswaKelas.sort((a, b) => {
+            if (a.status !== b.status) return a.status === "Mengikuti" ? -1 : 1;
+            return a.nama.localeCompare(b.nama);
+        });
+
+        // Elemen pembungkus halaman kelas menggunakan properti page-break-after: always
+        let sectionKelas = document.createElement("div");
+        sectionKelas.style.pageBreakAfter = "always";
+        sectionKelas.style.marginBottom = "30px";
+
+        let htmlKelas = `
+            <table style="width: 100%; border-bottom: 2px solid #000; margin-bottom: 20px;">
+                <tr>
+                    <td style="width: 100px;"><img src="https://lh3.googleusercontent.com/u/0/d/1NmhujSqCWX3fY30wSlAe9Ur5aR0jevXc" style="width: 70px;"></td>
+                    <td style="text-align: center;">
+                        <h2 style="margin:0; font-size: 18px;">DATA AWAL KEIKUTSERTAAN TKA 2026</h2>
+                        <h3 style="margin:0; font-size: 16px;">SMAN 9 SURABAYA - KELAS ${kelas.toUpperCase()}</h3>
+                    </td>
+                </tr>
+            </table>
+
+            <table border="1" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; font-size: 12px;">
+                <thead>
+                    <tr style="background-color: #f3f4f6;">
+                        <th style="padding: 8px; width: 30px;">No</th>
+                        <th style="padding: 8px;">Nama</th>
+                        <th style="padding: 8px; width: 60px;">Kelas</th>
+                        <th style="padding: 8px; width: 90px;">Status</th>
+                        <th style="padding: 8px;">Mapel 1</th>
+                        <th style="padding: 8px;">Mapel 2</th>
+                        <th style="padding: 8px; width: 100px;">Tanda Tangan</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+        dataSiswaKelas.forEach((item, index) => {
+            htmlKelas += `
+                <tr style="text-align: center; border: 1px solid #000;">
+                    <td style="padding: 5px;">${index + 1}</td>
+                    <td style="text-align: left; padding-left: 5px;">${item.nama}</td>
+                    <td>${item.kelas}</td>
+                    <td>${item.status}</td>
+                    <td>${item.mapel1 || '-'}</td>
+                    <td>${item.mapel2 || '-'}</td>
+                    <td></td>
+                </tr>
+            `;
+        });
+
+        const now = new Date();
+        htmlKelas += `
+                </tbody>
+            </table>
+            <p style="font-size: 10px; margin-top: 15px; font-style: italic;">
+                Data dicetak pada tanggal: ${now.toLocaleDateString('id-ID')} Pukul: ${now.toLocaleTimeString('id-ID')}
+            </p>
+        `;
+
+        sectionKelas.innerHTML = htmlKelas;
+        printTemplate.appendChild(sectionKelas);
+    });
+
+    // Tampilkan area cetak, aktifkan dialog browser, lalu kembalikan ke semula
+    printTemplate.style.display = "block";
+    window.print();
+    printTemplate.style.display = "none";
+}
+</script>
+</body>
+</html>
