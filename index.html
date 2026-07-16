@@ -376,26 +376,94 @@ async function refreshAdmin() {
     let d = await panggilAPI('aksi=getAdminData');
     window.dataSiswa = d.listSiswa; 
 
+    // --- PROSES HITUNG RINCIAN PER KELAS DI FRONTEND ---
+    let rincianSudah = {};
+    let rincianBelum = {};
+    let rincianIkut = {};
+    let rincianTidak = {};
+
+    window.dataSiswa.forEach(siswa => {
+      let klis = siswa.kelas || "TNP";
+      
+      // Inisialisasi awal objek counter kelas
+      if (!rincianSudah[klis]) rincianSudah[klis] = 0;
+      if (!rincianBelum[klis]) rincianBelum[klis] = 0;
+      if (!rincianIkut[klis]) rincianIkut[klis] = 0;
+      if (!rincianTidak[klis]) rincianTidak[klis] = 0;
+
+      // Logika pembagian data
+      if (siswa.status && siswa.status !== "" && siswa.status !== "-") {
+        rincianSudah[klis]++;
+        if (siswa.status === "Mengikuti") {
+          rincianIkut[klis]++;
+        } else {
+          rincianTidak[klis]++;
+        }
+      } else {
+        rincianBelum[klis]++;
+      }
+    });
+
+    // Helper fungsi untuk mengubah objek counter menjadi teks rincian ringkas
+    const buatTeksRincian = (objKalkulasi) => {
+      let arrTeks = [];
+      Object.keys(objKalkulasi).sort().forEach(k => {
+        if(objKalkulasi[k] > 0) {
+          arrTeks.push(`${k}: ${objKalkulasi[k]}`);
+        }
+      });
+      return arrTeks.length > 0 ? arrTeks.join(" | ") : "Belum ada";
+    };
+
+    // --- GENERATE HTML DENGAN STRUKTUR BARU (FULL SEBARIS + GRID 2X2 + RINCIAN KELAS) ---
     let html = `
-      <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; margin-bottom: 12px; color: #ffffff;">
-        <div style="background:#1e293b; padding:8px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
-          <small>Total Siswa</small><br><b style="font-size:16px;">${d.total}</b>
-        </div>
-        <div style="background:#2563eb; padding:8px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
-          <small>Sudah Isi</small><br><b style="font-size:16px;">${d.sudah}</b>
-        </div>
-        <div style="background:#c2410c; padding:8px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
-          <small>Belum Isi</small><br><b style="font-size:16px;">${d.total - d.sudah}</b>
-        </div>
+      <div style="background:#1e293b; color:#ffffff; padding:12px; border-radius:8px; text-align:center; border:1px solid #ffffff; margin-bottom: 8px;">
+        <small style="font-weight: bold; letter-spacing: 0.5px;">TOTAL SISWA MASTER</small><br>
+        <b style="font-size:24px; line-height: 1.3;">${d.total}</b>
       </div>
 
       <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 12px; color: #ffffff;">
-        <div style="background:#15803d; padding:10px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
-          <small>Ikut TKA</small><br><b style="font-size:16px;">${d.ikut}</b>
+        
+        <div style="background:#2563eb; padding:10px 6px; border-radius:8px; text-align:center; border:1px solid #ffffff; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <small style="font-weight: bold;">SUDAH ISI</small><br>
+            <b style="font-size:20px;">${d.sudah}</b>
+          </div>
+          <div style="font-size:10px; margin-top:6px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 4px; text-align: left; font-style: italic; line-height: 1.3;">
+            ${buatTeksRincian(rincianSudah)}
+          </div>
         </div>
-        <div style="background:#be123c; padding:10px; border-radius:8px; text-align:center; border:1px solid #ffffff;">
-          <small>Tidak Ikut</small><br><b style="font-size:16px;">${d.tidak}</b>
+
+        <div style="background:#c2410c; padding:10px 6px; border-radius:8px; text-align:center; border:1px solid #ffffff; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <small style="font-weight: bold;">BELUM ISI</small><br>
+            <b style="font-size:20px;">${d.total - d.sudah}</b>
+          </div>
+          <div style="font-size:10px; margin-top:6px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 4px; text-align: left; font-style: italic; line-height: 1.3;">
+            ${buatTeksRincian(rincianBelum)}
+          </div>
         </div>
+
+        <div style="background:#15803d; padding:10px 6px; border-radius:8px; text-align:center; border:1px solid #ffffff; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <small style="font-weight: bold;">IKUT TKA</small><br>
+            <b style="font-size:20px;">${d.ikut}</b>
+          </div>
+          <div style="font-size:10px; margin-top:6px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 4px; text-align: left; font-style: italic; line-height: 1.3;">
+            ${buatTeksRincian(rincianIkut)}
+          </div>
+        </div>
+
+        <div style="background:#be123c; padding:10px 6px; border-radius:8px; text-align:center; border:1px solid #ffffff; display: flex; flex-direction: column; justify-content: space-between;">
+          <div>
+            <small style="font-weight: bold;">TIDAK IKUT</small><br>
+            <b style="font-size:20px;">${d.tidak}</b>
+          </div>
+          <div style="font-size:10px; margin-top:6px; background: rgba(0,0,0,0.15); padding: 4px; border-radius: 4px; text-align: left; font-style: italic; line-height: 1.3;">
+            ${buatTeksRincian(rincianTidak)}
+          </div>
+        </div>
+
       </div>
 
       <div style="background:white; border:1px solid #e2e8f0; padding:12px; border-radius:8px; margin-bottom:12px; text-align:left;">
@@ -445,6 +513,7 @@ async function refreshAdmin() {
     if (btn) { btn.innerText = "REFRESH DATA"; btn.disabled = false; }
   }
 }
+
 
 // Logika visual pemilihan tombol box radio kesediaan siswa
 document.querySelectorAll('input[name="statusTKA"]').forEach(radio => {
