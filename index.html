@@ -3,7 +3,7 @@
 <head>
   <base target="_top">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Form TKA SMANIX</title>
+  <title>Portal TKA SMANIX</title>
   <style>
     body { font-family: sans-serif; padding: 20px; line-height: 1.6; max-width: 500px; margin: 0 auto; background: #f4f4f4; }
     .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
@@ -64,7 +64,7 @@
 
   <div id="siswaPage" class="section hidden">
     <label>Masukkan NISN diawali angka 9:</label>
-    <input type="text" id="nisn" placeholder="Contoh: 900123">
+    <input type="text" id="nisn" placeholder="Contoh: 90012398765">
     <p id="statusTxt" style="color: blue; font-size: 12px;"></p>
     <button onclick="cekAlur()">CEK DATA</button>
     <button class="btn-outline" onclick="resetKeHome()">KEMBALI</button>
@@ -418,7 +418,7 @@ async function refreshAdmin() {
     // --- GENERATE HTML DENGAN STRUKTUR BARU (FULL SEBARIS + GRID 2X2 + RINCIAN KELAS) ---
     let html = `
       <div style="background:#1e293b; color:#ffffff; padding:12px; border-radius:8px; text-align:center; border:1px solid #ffffff; margin-bottom: 8px;">
-        <small style="font-weight: bold; letter-spacing: 0.5px;">TOTAL SISWA MASTER</small><br>
+        <small style="font-weight: bold; letter-spacing: 0.5px;">TOTAL SISWA KELAS XII</small><br>
         <b style="font-size:24px; line-height: 1.3;">${d.total}</b>
       </div>
 
