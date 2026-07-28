@@ -18,14 +18,24 @@
     hr { border: 0; border-top: 1px solid #eee; margin: 20px 0; }
     
     @media print {
-      /* Sembunyikan semua elemen di layar utama saat mode cetak */
-      body > *:not(#printTemplate) { display: none !important; }
-      
-      /* Pastikan template cetak terlihat penuh */
-      #printTemplate { display: block !important; position: absolute; left: 0; top: 0; width: 100%; }
-      
-      /* Orientasi Landscape untuk PDF data TKA */
-      @page { size: landscape; margin: 10mm; }
+      /* Sembunyikan card utama aplikasi */
+      body {
+        background: white !important;
+        padding: 0 !important;
+      }
+      .card {
+        display: none !important;
+      }
+      /* Tampilkan hanya template cetak */
+      #printTemplate {
+        display: block !important;
+        position: static !important;
+        width: 100% !important;
+      }
+      @page {
+        size: landscape;
+        margin: 10mm;
+      }
     }
 
     .box-opsi {
@@ -636,8 +646,12 @@ function printData() {
 
         // 5. Eksekusi dialog Print
         printTemplate.style.display = "block";
-        window.print();
-        printTemplate.style.display = "none";
+
+        // Beri jeda 150ms agar browser selesai merender isi tabel sebelum preview cetak dibuka
+        setTimeout(() => {
+            window.print();
+            printTemplate.style.display = "none";
+        }, 150);
 
     } catch (err) {
         console.error("Error pada fungsi printData:", err);
