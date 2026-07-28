@@ -410,19 +410,20 @@ async function refreshAdmin() {
       if (!rincianIkut[klis]) rincianIkut[klis] = 0;
       if (!rincianTidak[klis]) rincianTidak[klis] = 0;
 
-      // Logika pembagian data
-      if (siswa.status && siswa.status !== "" && siswa.status !== "-") {
+      let st = siswa.status ? String(siswa.status).trim() : "";
+
+      // Logika pemilahan status
+      if (st === "Mengikuti") {
         rincianSudah[klis]++;
-        if (siswa.status === "Mengikuti") {
-          rincianIkut[klis]++;
-        } else {
-          rincianTidak[klis]++;
-        }
+        rincianIkut[klis]++;
+      } else if (st === "Tidak Mengikuti") {
+        rincianSudah[klis]++;
+        rincianTidak[klis]++;
       } else {
+        // Jika belum ngisi / kosong / "Belum Isi" -> Masuk ke Rincian Belum Isi (Orange)
         rincianBelum[klis]++;
       }
     });
-
     // Helper fungsi untuk mengubah objek counter menjadi teks rincian ringkas
     const buatTeksRincian = (objKalkulasi) => {
       let arrTeks = [];
