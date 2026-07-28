@@ -644,14 +644,21 @@ function printData() {
             printTemplate.appendChild(sectionKelas);
         });
 
-        // 5. Eksekusi dialog Print
+       // 5. Eksekusi dialog Print (Cara Paling Stabil dengan JS)
+        const mainCard = document.querySelector('.card');
+        
+        // Sembunyikan paksa UI aplikasi utama, munculkan template cetak
+        if (mainCard) mainCard.style.display = "none";
         printTemplate.style.display = "block";
 
-        // Beri jeda 150ms agar browser selesai merender isi tabel sebelum preview cetak dibuka
+        // Jeda waktu sedikit lebih lama (300ms) agar tabel dirender utuh
         setTimeout(() => {
             window.print();
+            
+            // Kembalikan UI aplikasi seperti semula setelah dialog print ditutup/batal
+            if (mainCard) mainCard.style.display = "block";
             printTemplate.style.display = "none";
-        }, 150);
+        }, 300);
 
     } catch (err) {
         console.error("Error pada fungsi printData:", err);
